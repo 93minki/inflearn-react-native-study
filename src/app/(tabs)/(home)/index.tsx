@@ -1,6 +1,14 @@
 import { BlurView } from "expo-blur";
 import { usePathname, useRouter } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Dimensions,
+  Image,
+  PixelRatio,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -10,40 +18,51 @@ export default function Index() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const isLoggedIn = false;
 
   console.log("pathname:", pathname);
   console.log("insets:", insets);
 
+  const { width, height } = Dimensions.get("window");
+  console.log(`Width: ${width}dp, Height: ${height}dp`);
+  console.log(
+    `Pixel Ratio Width: ${width * PixelRatio.get()}, Height: ${height * PixelRatio.get()}`,
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <BlurView style={styles.header}>
+      <BlurView style={styles.header} intensity={70}>
         <Image
           source={require("@/assets/images/react-logo.png")}
           style={styles.headerLogo}
         />
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.navigate(`/login`)}
-        >
-          <Text style={styles.loginButtonText}>로그인</Text>
-        </TouchableOpacity>
+        {!isLoggedIn && (
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.navigate(`/login`)}
+          >
+            <Text style={styles.loginButtonText}>로그인</Text>
+          </TouchableOpacity>
+        )}
       </BlurView>
-      <View style={styles.tabContainer}>
-        <View style={styles.tab}>
-          <TouchableOpacity onPress={() => router.navigate(`/`)}>
-            <Text style={{ color: pathname === "/" ? "red" : "black" }}>
-              For you
-            </Text>
-          </TouchableOpacity>
+      {isLoggedIn && (
+        <View style={styles.tabContainer}>
+          <View style={styles.tab}>
+            <TouchableOpacity onPress={() => router.navigate(`/`)}>
+              <Text style={{ color: pathname === "/" ? "red" : "black" }}>
+                For you
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.tab}>
+            <TouchableOpacity onPress={() => router.navigate(`/following`)}>
+              <Text style={{ color: pathname === "/" ? "black" : "red" }}>
+                Following
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.tab}>
-          <TouchableOpacity onPress={() => router.navigate(`/following`)}>
-            <Text style={{ color: pathname === "/" ? "black" : "red" }}>
-              Following
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      )}
       <View>
         <TouchableOpacity onPress={() => router.navigate(`/@zerocho/post/1`)}>
           <Text>게시글1</Text>
