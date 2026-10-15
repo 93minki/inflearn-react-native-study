@@ -1,9 +1,19 @@
+import {
+  Text as ComposeText,
+  DropdownMenu,
+  DropdownMenuItem,
+  Host,
+  RNHostView,
+} from "@expo/ui/jetpack-compose";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   FlatList,
   Image,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -56,8 +66,21 @@ export default function Modal() {
   const [replyOption, setReplyOption] = useState("Anyone");
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [hashTag, setHashTag] = useState("Add a topic");
 
   const replyOptions = ["Anyone", "Profiles you follow", "Mentioned only"];
+
+  const dropdownMenus = [
+    "창업아이디어",
+    "하이에나",
+    "비행기표",
+    "AI",
+    "강의",
+    "인프런",
+    "운동하는직장인",
+    "Threads birthday",
+  ];
 
   const handleCancel = () => {};
 
@@ -90,7 +113,43 @@ export default function Modal() {
 
   const removeImageFromThread = (id: string, uriToRemove: string) => {};
 
-  const getMyLocation = async (id: string) => {};
+  const getMyLocation = async (id: string) => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      try {
+        await Location.getForegroundPermissionsAsync();
+      } catch (error) {
+        console.error(error);
+        Alert.alert(
+          "Location permission denied",
+          "Please enable location permission in settings",
+          [
+            {
+              text: "Open Settings",
+              onPress: () => {
+                Linking.openSettings();
+              },
+            },
+            {
+              text: "Cancel",
+            },
+          ],
+        );
+      }
+      return;
+    }
+    const location = await Location.getCurrentPositionAsync({});
+    setThreads((prevThreads) =>
+      prevThreads.map((thread) =>
+        thread.id === id
+          ? {
+              ...thread,
+              location: [location.coords.latitude, location.coords.longitude],
+            }
+          : thread,
+      ),
+    );
+  };
 
   const renderThreadItem = ({
     item,
@@ -109,7 +168,45 @@ export default function Modal() {
       </View>
       <View style={styles.contentContainer}>
         <View style={styles.userInfoContainer}>
-          <Text style={styles.username}>zerohch0</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 4,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.username}>zerohch0</Text>
+            <Ionicons name="chevron-forward" size={12} color="#8e8e93" />
+            <Host matchContents>
+              <DropdownMenu
+                expanded={isExpanded}
+                onDismissRequest={() => setIsExpanded(false)}
+              >
+                <DropdownMenu.Trigger>
+                  <RNHostView matchContents>
+                    <Pressable onPress={() => setIsExpanded(true)}>
+                      <Text>{hashTag}</Text>
+                    </Pressable>
+                  </RNHostView>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Items>
+                  {dropdownMenus.map((menu, index) => (
+                    <DropdownMenuItem
+                      key={index}
+                      onClick={() => {
+                        setIsExpanded(false);
+                        setHashTag(menu);
+                      }}
+                    >
+                      <DropdownMenuItem.Text>
+                        <ComposeText>{menu}</ComposeText>
+                      </DropdownMenuItem.Text>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenu.Items>
+              </DropdownMenu>
+            </Host>
+          </View>
           {index > 0 && (
             <TouchableOpacity
               onPress={() => removeThread(item.id)}
