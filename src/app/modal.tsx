@@ -6,6 +6,7 @@ import {
   RNHostView,
 } from "@expo/ui/jetpack-compose";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -107,38 +108,72 @@ export default function Modal() {
     );
   };
 
-  const pickImage = async (id: string) => {};
+  const pickImage = async (id: string) => {
+    let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Photos permission not granted",
+        "Please grant photos permission to access your photos",
+        [
+          { text: "Open Settings", onPress: () => Linking.openSettings() },
+          {
+            text: "Cancel",
+          },
+        ],
+      );
+      return;
+    }
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "livePhotos", "videos"],
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+    });
+    console.log("result", result);
+  };
 
-  const takePhoto = async (id: string) => {};
+  const takePhoto = async (id: string) => {
+    let { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Camera permission not granted",
+        "Please grant camera permission to access your camera",
+        [{ text: "Open Settings", onPress: () => Linking.openSettings() }],
+      );
+      return;
+    }
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images", "livePhotos", "videos"],
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+    });
+    console.log("result", result);
+  };
 
   const removeImageFromThread = (id: string, uriToRemove: string) => {};
 
   const getMyLocation = async (id: string) => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      try {
-        await Location.getForegroundPermissionsAsync();
-      } catch (error) {
-        console.error(error);
-        Alert.alert(
-          "Location permission denied",
-          "Please enable location permission in settings",
-          [
-            {
-              text: "Open Settings",
-              onPress: () => {
-                Linking.openSettings();
-              },
+      Alert.alert(
+        "Location permission denied",
+        "Please enable location permission in settings",
+        [
+          {
+            text: "Open Settings",
+            onPress: () => {
+              Linking.openSettings();
             },
-            {
-              text: "Cancel",
-            },
-          ],
-        );
-      }
+          },
+          {
+            text: "Cancel",
+          },
+        ],
+      );
+
       return;
     }
     const location = await Location.getCurrentPositionAsync({});
+    console.log(location);
     setThreads((prevThreads) =>
       prevThreads.map((thread) =>
         thread.id === id
